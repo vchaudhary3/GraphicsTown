@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- Graphics town framework code by Mike Gleicher
+  -- written October, 2015
+  -->
+<head>
+    <meta charset="UTF-8">
+    <title>GraphicsTown Vedantika Chaudhary!</title>
+    <input id = "skybox" type="checkbox"  value="Skybox">Skybox<br>
+
+
+
+</head>
+<body>
+<!-- load this stuff first -->
+<script src="Libraries/twgl-full.js"></script>
+<script src="Libraries/panel.js"></script>
+<script src="Libraries/arcball.js"></script>
+<script src="grobject.js"></script>
+
+
+<!-- This is where we load the objects for the world -->
+<script src="ExampleObjects/simplest.js"></script>
+<script src="ExampleObjects/texturedplane.js"></script>
+<script src="ExampleObjects/pig.js"></script>
+<script src="ExampleObjects/tree.js"></script>
+<script src="ExampleObjects/farm.js"></script>
+<script src="ExampleObjects/fence.js"></script>
+<script src="ExampleObjects/Silo.js"></script>
+<script src="ExampleObjects/corn.js"></script>
+<script src="ExampleObjects/dirt.js"></script>
+<script src="ExampleObjects/pond.js"></script>
+<script src="ExampleObjects/fish.js"></script>
+<script src="ExampleObjects/bird.js"></script>
+<script src="ExampleObjects/skyf.js"></script>
+<script src="ExampleObjects/skyr.js"></script>
+<script src="ExampleObjects/skyb.js"></script>
+<script src="ExampleObjects/skyl.js"></script>
+<script src="ExampleObjects/skyg.js"></script>
+<script src="ExampleObjects/skyt.js"></script>
+<script src="ExampleObjects/tractor.js"></script>
+<!-- I am adding the helicopter -->
+<script src="Helicopter/helicopter.js"></script>
+
+<!-- This gets loaded LAST (actually, it probably doesn't have to) -->
+<script src="graphicstown.js"></script>
+</body>
+
+<!-- all of the shaders get stuck here in the HTML because
+  -- that's the only way I know to load them without either
+  -- sticking them in JavaScript strings, or using a web server
+  -->
+
+  <script id="fence-vs" type="notjs">
+      precision highp float;
+      attribute vec3 vpos;
+      attribute vec3 vnormal;
+      attribute vec3 vcolor;
+      varying vec3 outColor;
+      varying vec3 fPosition;
+
+      uniform mat4 view;
+      uniform mat4 proj;
+      uniform mat4 model;
+      uniform vec3 lightdir;
+      uniform vec3 fencecolor;
+
+
+      void main(void) {
+          gl_Position = proj * view * model * vec4(vpos, 1.0);
+          vec4 normal = normalize(model * vec4(vnormal,0.0));
+          fPosition = (view * model * vec4(vpos, 1.0)).xyz;
+          float diffuse = .5 + .5*abs(dot(normal, vec4(lightdir,0.0)));
+          outColor = (vpos+vec3(.4,.3,.5)) * diffuse;
+      }
+  </script>
+  <script id="fence-fs" type="notjs">
+      precision highp float;
+      varying vec3 outColor;
+      varying vec3 fPosition;
+      void main(void) {
+          gl_FragColor = vec4(outColor, 1.0);
+      }
+  </script>
+  <script id="bird-vs" type="notjs">
+      precision highp float;
+      attribute vec3 vpos;
+      attribute vec3 vnormal;
+      attribute vec3 vcolor;
+      varying vec3 outColor;
+      varying vec3 fPosition;
+
+      uniform mat4 view;
+      uniform mat4 proj;
+      uniform mat4 model;
+      uniform vec3 lightdir;
+      uniform vec3 birdcolor;
+
+
+      void main(void) {
+          gl_Position = proj * view * model * vec4(vpos, 1.0);
+          vec4 normal = normalize(model * vec4(vnormal,0.0));
+          fPosition = (view * model * vec4(vpos, 1.0)).xyz;
+          float diffuse = .5 + .5*abs(dot(normal, vec4(lightdir,0.0)));
+          outColor = (vcolor) * diffuse;
+      }
+  </script>
+  <script id="bird-fs" type="notjs">
+      precision highp float;
+      varying vec3 outColor;
+      varying vec3 fPosition;
+      void main(void) {
+          gl_FragColor = vec4(outColor, 1.0);
+      }
+  </script>
+
+  <script id="farm-vs" type="notjs">
+            precision highp float;
+            attribute vec3 vpos;
+            attribute vec3 vnormal;
+            attribute vec3 vcolor;
+            uniform mat3 normalMatrix;
+            uniform mat4 modelViewMatrix;
+            uniform mat4 projectionMatrix;
+            varying vec3 fNormal;
+            varying vec3 fPosition;
+            varying vec3 fColor;
+
+            uniform mat4 view;
+           uniform mat4 proj;
+           uniform mat4 model;
+           uniform vec3 lightdir;
+           uniform vec3 cubecolor;
+
+            void main()
+            {
+                fNormal = normalize(view * model * vec4(vnormal,0.0)).xyz;
+                fPosition = (view * model * vec4(vpos, 1.0)).xyz;
+                fColor = vcolor;
+                gl_Position = proj * view * model * vec4(vpos, 1.0);
+
+            }
+  </script>
+  <script id="farm-fs" type="notjs">
+            precision highp float;
+            varying vec3 fPosition;
+            varying vec3 fNormal;
+            varying vec3 fColor;
+            uniform vec3 lightdir;
+
+            const float Ka         = 1.0;
+            const float Kd         = 0.9;
+            const float Ks         = 1.0;
+            const float sExp       = 32.0;
+            const vec3  lightPos   = vec3(100.0,00.0,0.0);
+            const vec3  lightCol   = vec3(1.0,1.0,1.0);
+            const vec3  objectCol  = vec3(1.0,0.6,0.0); // yellow-ish orange
+
+            void main()
+            {
+            vec3 l=normalize(lightdir);
+            vec3 n=normalize(fNormal);
+            vec3 e=normalize(-fPosition);
+            vec3 h=normalize(e+l);
+
+            vec3 ambientColor  = Ka*fColor;
+            vec3 diffuseColor  = Kd*fColor*dot(l,n);
+            vec3 specularColor = Ks*lightCol*pow(max(dot(h,n),0.0),sExp);
+            gl_FragColor = vec4(ambientColor+diffuseColor+specularColor, 1.0);
+            }
+  </script>
+
+
+  <script id="pig-vs" type="notjs">
+            precision highp float;
+            attribute vec3 vpos;
+            attribute vec3 vnormal;
+            attribute vec3 vcolor;
+            uniform mat3 normalMatrix;
+            uniform mat4 modelViewMatrix;
+            uniform mat4 projectionMatrix;
+            varying vec3 fNormal;
+            varying vec3 fPosition;
+            varying vec3 fColor;
+
+            uniform mat4 view;
+           uniform mat4 proj;
+           uniform mat4 model;
+           uniform vec3 lightdir;
+           uniform vec3 pigcolor;
+
+            void main()
+            {
+                fNormal = normalize(view * model * vec4(vnormal,0.0)).xyz;
+                fPosition = (view * model * vec4(vpos, 1.0)).xyz;
+                fColor = vcolor;
+                gl_Position = proj * view * model * vec4(vpos, 1.0);
+
+            }
+  </script>
+  <script id="pig-fs" type="notjs">
+            precision highp float;
+            varying vec3 fPosition;
+            varying vec3 fNormal;
+            varying vec3 fColor;
+            uniform vec3 lightdir;
+             uniform vec3 pigcolor;
+
+            const float Ka         = 0.7;
+            const float Kd         = 0.5;
+            const float Ks         = 0.4;
+            const float sExp       = 5.0;
+            const vec3  lightPos   = vec3(100.0,00.0,0.0);
+            const vec3  lightCol   = vec3(1.0,1.0,1.0);
+            const vec3  objectCol  = vec3(1.0,0.6,0.0); // yellow-ish orange
+
+            void main()
+            {
+            vec3 l=normalize(lightdir);
+            vec3 n=normalize(fNormal);
+            vec3 e=normalize(-fPosition);
+            vec3 h=normalize(e+l);
+
+            vec3 ambientColor  = Ka*pigcolor;
+            vec3 diffuseColor  = Kd*pigcolor*dot(l,n);
+            vec3 specularColor = Ks*lightCol*pow(max(dot(h,n),0.0),sExp);
+            gl_FragColor = vec4(ambientColor+diffuseColor+specularColor, 1.0);
+            }
+  </script>
+
+
+<script id="tree-vs" type="notjs">
+// specialized shader for the simple cube
+// we assume that the model matrix works as the normal
+//      matrix - this only is try if the model matrix
+//      it a rotate/translate
+//      (uniform scale is OK since we re-normalize)
+// color is solid
+// simple lighting
+    precision highp float;
+
+    attribute vec3 vpos;
+    attribute vec3 vnormal;
+    attribute vec3 vcolor;
+    attribute vec2 vtexturecoords;
+    varying vec3 outColor;
+    varying vec2 fTexCoord;
+
+    uniform mat4 view;
+    uniform mat4 proj;
+    uniform mat4 model;
+    uniform vec3 lightdir;
+    uniform vec3 treecolor;
+
+
+    void main(void) {
+        gl_Position = proj * view * model * vec4(vpos, 1.0);
+        vec4 normal = normalize(model * vec4(vnormal,0.0));
+        float diffuse = .5 + .5*abs(dot(normal, vec4(lightdir,0.0)));
+        outColor = vcolor * diffuse;
+        fTexCoord = vtexturecoords;
+    }
+</script>
+<script id="tree-fs" type="notjs">
+// simple shader that does vertex coloring
+//  (e.g. the vertex shader figures the lighting
+// note this is used for more than just the cube
+    precision highp float;
+    varying vec3 outColor;
+    varying vec2 fTexCoord;
+    void main(void) {
+        gl_FragColor = vec4(outColor, 1.0);
+    }
+</script>
+
+<script id="fish-vs" type="notjs">
+// specialized shader for the simple cube
+// we assume that the model matrix works as the normal
+//      matrix - this only is try if the model matrix
+//      it a rotate/translate
+//      (uniform scale is OK since we re-normalize)
+// color is solid
+// simple lighting
+    precision highp float;
+
+    attribute vec3 vpos;
+    attribute vec3 vnormal;
+    attribute vec3 vcolor;
+    attribute vec2 vtexturecoords;
+    varying vec3 outColor;
+    varying vec2 fTexCoord;
+
+    uniform mat4 view;
+    uniform mat4 proj;
+    uniform mat4 model;
+    uniform vec3 lightdir;
+    uniform vec3 fishcolor;
+
+
+    void main(void) {
+        gl_Position = proj * view * model * vec4(vpos, 1.0);
+        vec4 normal = normalize(model * vec4(vnormal,0.0));
+        float diffuse = .5 + .5*abs(dot(normal, vec4(lightdir,0.0)));
+        outColor = vcolor * diffuse;
+        fTexCoord = vtexturecoords;
+    }
+</script>
+<script id="fish-fs" type="notjs">
+// simple shader that does vertex coloring
+//  (e.g. the vertex shader figures the lighting
+// note this is used for more than just the cube
+    precision highp float;
+    varying vec3 outColor;
+    varying vec2 fTexCoord;
+    void main(void) {
+        gl_FragColor = vec4(outColor, 1.0);
+    }
+</script>
+
+
+<!-- Special Ground Plane Shader - makes a boring
+  -- checkerboard
+  -->
+<script id="ground-vs" type="not-js">
+    precision highp float;
+
+    attribute vec3 vpos;
+    varying vec3 outPos;
+
+    uniform mat4 view;
+    uniform mat4 proj;
+
+    void main(void) {
+        gl_Position = proj * view * vec4(vpos, 1.0);
+        outPos = vpos;
+    }
+</script>
+<script id="ground-fs" type="notjs">
+    // note this is used for more than just the cube
+    precision highp float;
+    varying vec3 outPos;
+    void main(void) {
+        float xs = step(1.0,mod(outPos.x,2.0));
+        float zs = step(1.0,mod(outPos.z,2.0));
+        float ss = (xs>.5) ? zs : 1.0-zs;
+        gl_FragColor = mix(vec4(0.486275, 0.988235, 0,1),
+                           vec4(0.419608, 0.556863, 0.137255,1),
+                           ss
+                           );
+
+    }
+</script>
+
+</html>
