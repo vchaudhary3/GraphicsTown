@@ -1,2 +1,2 @@
 # GraphicsTownJS
-GraphicsTown2015 in JavaScript - basic framework code for CS559 
+GraphicsTown in JavaScript - basic framework code for CS559 
